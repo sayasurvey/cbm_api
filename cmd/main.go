@@ -1,12 +1,12 @@
 package main
 
 import (
-  // "github.com/soramar/CBM_api/router"
+	"github.com/soramar/CBM_api/router"
 )
 
 func main() {
-  // database.DbInit()
+	// database.DbInit()
 
-  router := router.GetRouter()
-  router.Run(":8080")
+	router := router.GetRouter()
+	router.Run(":8080")
 }
