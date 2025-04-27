@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/soramar/CBM_api/router"
+	"github.com/sayasurvey/golang/router"
 )
 
 func main() {
