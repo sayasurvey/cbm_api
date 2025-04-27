@@ -1,4 +1,4 @@
-module github.com/soramar/CBM_api
+module github.com/sayasurvey/golang
 
 go 1.20
 
