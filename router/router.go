@@ -10,5 +10,11 @@ func GetRouter() *gin.Engine {
 
 	r.GET("/", controller.SayHello)
 
+	auth := r.Group("/api/auth")
+	{
+		auth.POST("/register", controller.Register)
+		auth.POST("/login", controller.Login)
+	}
+
 	return r
 }

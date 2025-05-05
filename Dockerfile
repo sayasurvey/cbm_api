@@ -1,4 +1,4 @@
-FROM golang:1.20-bullseye
+FROM golang:1.23-bullseye
 
 ENV ROOT=/go/src
 
