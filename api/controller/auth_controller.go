@@ -31,6 +31,13 @@ type AuthResponse struct {
 	} `json:"user"`
 }
 
+type UserResponse struct {
+	ID    uint   `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+}
+
 func Register(c *gin.Context) {
 	var request RegisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -109,4 +116,34 @@ func Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func Logout(c *gin.Context) {
+	// クライアント側でトークンを削除するように指示
+	c.JSON(http.StatusOK, gin.H{
+		"message": "ログアウトしました",
+	})
+}
+
+func GetUsers(c *gin.Context) {
+	var users []schema.User
+	if err := database.Db.Find(&users).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ユーザー一覧の取得に失敗しました"})
+		return
+	}
+
+	// パスワードを除外してレスポンスを作成
+	var response []UserResponse
+	for _, user := range users {
+		response = append(response, UserResponse{
+			ID:    user.ID,
+			Name:  user.Name,
+			Email: user.Email,
+			Role:  string(user.Role),
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"users": response,
+	})
 } 
