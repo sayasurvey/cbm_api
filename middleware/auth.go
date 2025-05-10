@@ -29,7 +29,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return []byte(os.Getenv("SECRET_KEY")), nil // 本番環境では環境変数から取得
+			return []byte(os.Getenv("SECRET_KEY")), nil
 		})
 
 		if err != nil {
