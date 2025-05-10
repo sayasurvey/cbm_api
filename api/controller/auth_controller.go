@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
+	"os"
 )
 
 type RegisterRequest struct {
@@ -94,7 +95,7 @@ func Login(c *gin.Context) {
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	tokenString, err := token.SignedString([]byte("your-secret-key")) // 本番環境では環境変数から取得
+	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
@@ -119,7 +120,6 @@ func Login(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	// クライアント側でトークンを削除するように指示
 	c.JSON(http.StatusOK, gin.H{
 		"message": "ログアウトしました",
 	})
@@ -132,7 +132,6 @@ func GetUsers(c *gin.Context) {
 		return
 	}
 
-	// パスワードを除外してレスポンスを作成
 	var response []UserResponse
 	for _, user := range users {
 		response = append(response, UserResponse{

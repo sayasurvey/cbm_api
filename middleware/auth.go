@@ -5,6 +5,7 @@ import (
 	"strings"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"os"
 )
 
 func JWTAuthMiddleware() gin.HandlerFunc {
@@ -16,7 +17,6 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Bearerトークンの形式を確認
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "無効な認証形式です"})
@@ -26,11 +26,10 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 
 		tokenString := parts[1]
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			// 署名アルゴリズムの検証
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return []byte("your-secret-key"), nil // 本番環境では環境変数から取得
+			return []byte(os.Getenv("SECRET_KEY")), nil // 本番環境では環境変数から取得
 		})
 
 		if err != nil {
@@ -40,7 +39,6 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			// ユーザー情報をコンテキストに保存
 			c.Set("user_id", uint(claims["user_id"].(float64)))
 			c.Set("email", claims["email"].(string))
 			c.Set("role", claims["role"].(string))
