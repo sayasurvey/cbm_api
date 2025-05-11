@@ -3,12 +3,7 @@ package controller
 import (
 	"net/http"
 	"github.com/gin-gonic/gin"
-	"github.com/sayasurvey/golang/model/schema"
-	"github.com/sayasurvey/golang/model/database"
-	"golang.org/x/crypto/bcrypt"
-	"github.com/golang-jwt/jwt/v5"
-	"time"
-	"os"
+	"github.com/sayasurvey/golang/api/repository"
 )
 
 type RegisterRequest struct {
@@ -39,6 +34,8 @@ type UserResponse struct {
 	Role  string `json:"role"`
 }
 
+var authRepo = repository.NewAuthRepository()
+
 func Register(c *gin.Context) {
 	var request RegisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -46,21 +43,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "パスワードのハッシュ化に失敗しました"})
-		return
-	}
-
-	user := schema.User{
-		Name:     request.Name,
-		Email:    request.Email,
-		Password: string(hashedPassword),
-		Role:     schema.UserRole,
-	}
-
-	result := database.Db.Create(&user)
-	if result.Error != nil {
+	if err := authRepo.CreateUser(request.Name, request.Email, request.Password); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ユーザの登録に失敗しました"})
 		return
 	}
@@ -77,25 +60,18 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	var user schema.User
-	if err := database.Db.Where("email = ?", request.Email).First(&user).Error; err != nil {
+	user, err := authRepo.FindUserByEmail(request.Email)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "メールアドレスまたはパスワードが正しくありません"})
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+	if err := authRepo.ValidatePassword(user, request.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "メールアドレスまたはパスワードが正しくありません"})
 		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"email":   user.Email,
-		"role":    user.Role,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+	tokenString, err := authRepo.GenerateToken(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "トークンの生成に失敗しました"})
 		return
@@ -126,8 +102,8 @@ func Logout(c *gin.Context) {
 }
 
 func GetUsers(c *gin.Context) {
-	var users []schema.User
-	if err := database.Db.Find(&users).Error; err != nil {
+	users, err := authRepo.GetAllUsers()
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ユーザー一覧の取得に失敗しました"})
 		return
 	}
@@ -145,4 +121,4 @@ func GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"users": response,
 	})
-} 
+}
