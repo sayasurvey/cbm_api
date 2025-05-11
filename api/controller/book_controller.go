@@ -58,7 +58,6 @@ func CreateBook(c *gin.Context) {
 		return
 	}
 
-	// ユーザー情報を取得
 	var user schema.User
 	if err := database.Db.First(&user, 1).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
