@@ -109,6 +109,17 @@ type UpdateBookRequest struct {
 	Loanable bool   `json:"loanable" binding:"required"`
 }
 
+type UpdateBookResponse struct {
+	ID       uint   `json:"id"`
+	Title    string `json:"title"`
+	ImageUrl string `json:"image_url"`
+	Loanable bool   `json:"loanable"`
+	User     struct {
+		ID   uint   `json:"id"`
+		Name string `json:"name"`
+	} `json:"user"`
+}
+
 func UpdateBook(c *gin.Context) {
 	id := c.Param("id")
 	var request UpdateBookRequest
@@ -120,7 +131,7 @@ func UpdateBook(c *gin.Context) {
 	}
 
 	var book schema.Book
-	if err := database.Db.First(&book, id).Error; err != nil {
+	if err := database.Db.Preload("User").First(&book, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "本が見つかりません",
 		})
@@ -138,9 +149,23 @@ func UpdateBook(c *gin.Context) {
 		return
 	}
 
+	response := UpdateBookResponse{
+		ID:       book.ID,
+		Title:    book.Title,
+		ImageUrl: book.ImageUrl,
+		Loanable: book.Loanable,
+		User: struct {
+			ID   uint   `json:"id"`
+			Name string `json:"name"`
+		}{
+			ID:   book.User.ID,
+			Name: book.User.Name,
+		},
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "本の更新に成功しました",
-		"book": book,
+		"book": response,
 	})
 }
 
