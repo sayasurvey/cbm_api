@@ -17,6 +17,8 @@ func GetRouter() *gin.Engine {
 		api.POST("/register", controller.Register)
 		api.POST("/logout", controller.Logout)
 		api.GET("/users", controller.GetUsers)
+		api.GET("/books", controller.GetBooks)
+		api.POST("/books", controller.CreateBook)
 	}
 
 	return r
