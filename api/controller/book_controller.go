@@ -10,14 +10,14 @@ import (
 )
 
 type BookResponse struct {
-	ID    		uint    `json:"id"`
-	Title  		string 	`json:"title"`
-	ImageUrl 	string 	`json:"image_url"`
+	ID    		uint    	`json:"id"`
+	Title  		string 		`json:"title"`
+	ImageUrl 	string 		`json:"image_url"`
 	Loanable 	bool 		`json:"loanable"`
 	User    struct {
-		ID   uint    `json:"id"`
-		Name string `json:"name"`
-	} `json:"User"`
+		ID   uint    	`json:"id"`
+		Name string 	`json:"name"`
+	} `json:"user"`
 }
 
 func GetBooks(context *gin.Context) {
@@ -58,11 +58,21 @@ func CreateBook(c *gin.Context) {
 		return
 	}
 
+	// ユーザー情報を取得
+	var user schema.User
+	if err := database.Db.First(&user, 1).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "ユーザー情報の取得に失敗しました",
+		})
+		return
+	}
+
 	book := schema.Book{
-		UserId:   1,
+		UserId:   user.ID,
 		Title:    request.Title,
 		ImageUrl: request.ImageUrl,
 		Loanable: request.Loanable,
+		User:     user,
 	}
 
 	result := database.Db.Create(&book)
@@ -73,9 +83,23 @@ func CreateBook(c *gin.Context) {
 		return
 	}
 
+	response := BookResponse{
+		ID:       book.ID,
+		Title:    book.Title,
+		ImageUrl: book.ImageUrl,
+		Loanable: book.Loanable,
+		User: struct {
+			ID   uint   `json:"id"`
+			Name string `json:"name"`
+		}{
+			ID:   user.ID,
+			Name: user.Name,
+		},
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "本の作成に成功しました",
-		"book": book,
+		"book": response,
 	})
 }
 
