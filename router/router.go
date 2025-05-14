@@ -21,6 +21,8 @@ func GetRouter() *gin.Engine {
 		api.POST("/books", controller.CreateBook)
 		api.PUT("/books/:id", controller.UpdateBook)
 		api.DELETE("/books/:id", controller.DeleteBook)
+		api.POST("/books/borrow", controller.BorrowBook)
+		api.POST("/books/return", controller.ReturnBook)
 	}
 
 	return r
