@@ -18,6 +18,14 @@ type ReturnBookRequest struct {
 	BorrowedBookID uint `json:"borrowed_book_id" binding:"required"`
 }
 
+type BorrowedBookResponse struct {
+	ID            uint   `json:"id"`
+	Title         string `json:"title"`
+	ImageUrl      string `json:"image_url"`
+	CheckoutDate  string `json:"checkout_date"`
+	ReturnDueDate string `json:"return_due_date"`
+}
+
 func BorrowBook(c *gin.Context) {
 	var request BorrowBookRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -163,4 +171,43 @@ func ReturnBook(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "本の返却が完了しました",
 	})
+}
+
+func GetBorrowedBooks(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "認証が必要です",
+		})
+		return
+	}
+
+	var borrowedBooks []schema.BorrowedBook
+	if err := database.Db.Where("user_id = ?", userID).Find(&borrowedBooks).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "貸出情報の取得に失敗しました",
+		})
+		return
+	}
+
+	var response []BorrowedBookResponse
+	for _, borrowedBook := range borrowedBooks {
+		var book schema.Book
+		if err := database.Db.First(&book, borrowedBook.BookID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "本の情報取得に失敗しました",
+			})
+			return
+		}
+
+		response = append(response, BorrowedBookResponse{
+			ID:            borrowedBook.ID,
+			Title:         book.Title,
+			ImageUrl:      book.ImageUrl,
+			CheckoutDate:  borrowedBook.CheckoutDate.Format("2006-01-02"),
+			ReturnDueDate: borrowedBook.ReturnDueDate.Format("2006-01-02"),
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
 }

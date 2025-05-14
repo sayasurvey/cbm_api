@@ -23,6 +23,7 @@ func GetRouter() *gin.Engine {
 		api.DELETE("/books/:id", controller.DeleteBook)
 		api.POST("/books/borrow", controller.BorrowBook)
 		api.POST("/books/return", controller.ReturnBook)
+		api.GET("/books/borrowed", controller.GetBorrowedBooks)
 	}
 
 	return r
