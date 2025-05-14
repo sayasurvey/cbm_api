@@ -190,24 +190,29 @@ func GetBorrowedBooks(c *gin.Context) {
 		return
 	}
 
-	var response []BorrowedBookResponse
-	for _, borrowedBook := range borrowedBooks {
-		var book schema.Book
-		if err := database.Db.First(&book, borrowedBook.BookID).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "本の情報取得に失敗しました",
-			})
-			return
-		}
+	response := []BorrowedBookResponse{}
 
-		response = append(response, BorrowedBookResponse{
-			ID:            borrowedBook.ID,
-			Title:         book.Title,
-			ImageUrl:      book.ImageUrl,
-			CheckoutDate:  borrowedBook.CheckoutDate.Format("2006-01-02"),
-			ReturnDueDate: borrowedBook.ReturnDueDate.Format("2006-01-02"),
-		})
+	if len(borrowedBooks) > 0 {
+		for _, borrowedBook := range borrowedBooks {
+			var book schema.Book
+			if err := database.Db.First(&book, borrowedBook.BookID).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": "本の情報取得に失敗しました",
+				})
+				return
+			}
+
+			response = append(response, BorrowedBookResponse{
+				ID:            borrowedBook.ID,
+				Title:         book.Title,
+				ImageUrl:      book.ImageUrl,
+				CheckoutDate:  borrowedBook.CheckoutDate.Format("2006-01-02"),
+				ReturnDueDate: borrowedBook.ReturnDueDate.Format("2006-01-02"),
+			})
+		}
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, gin.H{
+		"borrowed_books": response,
+	})
 }
