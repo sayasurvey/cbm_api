@@ -9,9 +9,9 @@ import (
 )
 
 type BorrowBookRequest struct {
-	BookID        uint      `json:"book_id" binding:"required"`
-	CheckoutDate  time.Time `json:"checkout_date" binding:"required"`
-	ReturnDueDate time.Time `json:"return_due_date" binding:"required"`
+	BookID        uint   `json:"book_id" binding:"required"`
+	CheckoutDate  string `json:"checkout_date" binding:"required"`
+	ReturnDueDate string `json:"return_due_date" binding:"required"`
 }
 
 type ReturnBookRequest struct {
@@ -50,11 +50,27 @@ func BorrowBook(c *gin.Context) {
 		return
 	}
 
+	checkoutDate, err := time.Parse("2006-01-02", request.CheckoutDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "貸出日の形式が正しくありません。YYYY-MM-DD形式で入力してください",
+		})
+		return
+	}
+
+	returnDueDate, err := time.Parse("2006-01-02", request.ReturnDueDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "返却予定日の形式が正しくありません。YYYY-MM-DD形式で入力してください",
+		})
+		return
+	}
+
 	borrowedBook := schema.BorrowedBook{
 		UserID:        userID.(uint),
 		BookID:        request.BookID,
-		CheckoutDate:  request.CheckoutDate,
-		ReturnDueDate: request.ReturnDueDate,
+		CheckoutDate:  checkoutDate,
+		ReturnDueDate: returnDueDate,
 	}
 
 	tx := database.Db.Begin()
@@ -84,7 +100,13 @@ func BorrowBook(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "本の貸し出しが完了しました",
-		"borrowed_book": borrowedBook,
+		"borrowed_book": gin.H{
+			"id":              borrowedBook.ID,
+			"user_id":         borrowedBook.UserID,
+			"book_id":         borrowedBook.BookID,
+			"checkout_date":   request.CheckoutDate,
+			"return_due_date": request.ReturnDueDate,
+		},
 	})
 }
 
