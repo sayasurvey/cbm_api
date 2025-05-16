@@ -144,4 +144,4 @@ func GetWishList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"wish_list": response,
 	})
-} 
+}
