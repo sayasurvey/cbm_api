@@ -36,7 +36,6 @@ func AddToWishList(c *gin.Context) {
 		return
 	}
 
-	// 本の存在確認
 	book, err := wishListRepo.FindBookByID(request.BookID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -45,7 +44,6 @@ func AddToWishList(c *gin.Context) {
 		return
 	}
 
-	// 既に追加済みかチェック
 	_, err = wishListRepo.FindWishListByUserIDAndBookID(userID.(uint), request.BookID)
 	if err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{
