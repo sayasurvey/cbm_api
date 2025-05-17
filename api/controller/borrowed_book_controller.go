@@ -2,8 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/sayasurvey/golang/model/schema"
-	"github.com/sayasurvey/golang/model/database"
+	"github.com/sayasurvey/golang/api/repository"
 	"net/http"
 	"time"
 )
@@ -26,6 +25,8 @@ type BorrowedBookResponse struct {
 	ReturnDueDate string `json:"return_due_date"`
 }
 
+var borrowedBookRepo = repository.NewBorrowedBookRepository()
+
 func BorrowBook(c *gin.Context) {
 	var request BorrowBookRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -43,8 +44,8 @@ func BorrowBook(c *gin.Context) {
 		return
 	}
 
-	var book schema.Book
-	if err := database.Db.First(&book, request.BookID).Error; err != nil {
+	book, err := borrowedBookRepo.FindBookByID(request.BookID)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "本が見つかりません",
 		})
@@ -74,34 +75,10 @@ func BorrowBook(c *gin.Context) {
 		return
 	}
 
-	borrowedBook := schema.BorrowedBook{
-		UserID:        userID.(uint),
-		BookID:        request.BookID,
-		CheckoutDate:  checkoutDate,
-		ReturnDueDate: returnDueDate,
-	}
-
-	tx := database.Db.Begin()
-
-	if err := tx.Create(&borrowedBook).Error; err != nil {
-		tx.Rollback()
+	borrowedBook, err := borrowedBookRepo.CreateBorrowedBook(userID.(uint), request.BookID, checkoutDate, returnDueDate)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "貸し出し情報の保存に失敗しました",
-		})
-		return
-	}
-
-	if err := tx.Model(&book).Update("loanable", false).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "本の状態更新に失敗しました",
-		})
-		return
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "トランザクションのコミットに失敗しました",
+			"error": "貸し出し処理に失敗しました",
 		})
 		return
 	}
@@ -127,43 +104,17 @@ func ReturnBook(c *gin.Context) {
 		return
 	}
 
-	var borrowedBook schema.BorrowedBook
-	if err := database.Db.First(&borrowedBook, request.BorrowedBookID).Error; err != nil {
+	borrowedBook, err := borrowedBookRepo.FindBorrowedBookByID(request.BorrowedBookID)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "貸し出し情報が見つかりません",
 		})
 		return
 	}
 
-	var book schema.Book
-	if err := database.Db.First(&book, borrowedBook.BookID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "本が見つかりません",
-		})
-		return
-	}
-
-	tx := database.Db.Begin()
-
-	if err := tx.Delete(&borrowedBook).Error; err != nil {
-		tx.Rollback()
+	if err := borrowedBookRepo.ReturnBook(borrowedBook); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "貸し出し情報の削除に失敗しました",
-		})
-		return
-	}
-
-	if err := tx.Model(&book).Update("loanable", true).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "本の状態更新に失敗しました",
-		})
-		return
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "トランザクションのコミットに失敗しました",
+			"error": "返却処理に失敗しました",
 		})
 		return
 	}
@@ -182,8 +133,8 @@ func GetBorrowedBooks(c *gin.Context) {
 		return
 	}
 
-	var borrowedBooks []schema.BorrowedBook
-	if err := database.Db.Where("user_id = ?", userID).Find(&borrowedBooks).Error; err != nil {
+	borrowedBooks, err := borrowedBookRepo.GetBorrowedBooksByUserID(userID.(uint))
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "貸出情報の取得に失敗しました",
 		})
@@ -191,11 +142,10 @@ func GetBorrowedBooks(c *gin.Context) {
 	}
 
 	response := []BorrowedBookResponse{}
-
 	if len(borrowedBooks) > 0 {
 		for _, borrowedBook := range borrowedBooks {
-			var book schema.Book
-			if err := database.Db.First(&book, borrowedBook.BookID).Error; err != nil {
+			book, err := borrowedBookRepo.FindBookByID(borrowedBook.BookID)
+			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"error": "本の情報取得に失敗しました",
 				})
