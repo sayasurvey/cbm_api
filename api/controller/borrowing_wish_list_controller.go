@@ -14,7 +14,7 @@ type AddToWishListRequest struct {
 type WishListResponse struct {
 	ID       uint   `json:"id"`
 	Title    string `json:"title"`
-	ImageUrl string `json:"image_url"`
+	ImageUrl string `json:"imageUrl"`
 }
 
 var wishListRepo = repository.NewBorrowingWishListRepository()

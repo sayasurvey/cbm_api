@@ -20,7 +20,7 @@ type ReturnBookRequest struct {
 type BorrowedBookResponse struct {
 	ID            uint   `json:"id"`
 	Title         string `json:"title"`
-	ImageUrl      string `json:"image_url"`
+	ImageUrl      string `json:"imageUrl"`
 	CheckoutDate  string `json:"checkout_date"`
 	ReturnDueDate string `json:"return_due_date"`
 }
