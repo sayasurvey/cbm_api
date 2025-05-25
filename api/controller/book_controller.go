@@ -13,7 +13,7 @@ import (
 type BookResponse struct {
 	ID    		uint    	`json:"id"`
 	Title  		string 		`json:"title"`
-	ImageUrl 	string 		`json:"image_url"`
+	ImageUrl 	string 		`json:"imageUrl"`
 	Loanable 	bool 		`json:"loanable"`
 	User    struct {
 		ID   uint    	`json:"id"`
@@ -82,7 +82,7 @@ func GetBooks(context *gin.Context) {
 
 type CreateBookRequest struct {
 	Title    string `json:"title" binding:"required"`
-	ImageUrl string `json:"image_url" binding:"required"`
+	ImageUrl string `json:"imageUrl" binding:"required"`
 	Loanable bool   `json:"loanable" binding:"required"`
 }
 
@@ -141,14 +141,14 @@ func CreateBook(c *gin.Context) {
 
 type UpdateBookRequest struct {
 	Title    string `json:"title" binding:"required"`
-	ImageUrl string `json:"image_url" binding:"required"`
+	ImageUrl string `json:"imageUrl" binding:"required"`
 	Loanable bool   `json:"loanable" binding:"required"`
 }
 
 type UpdateBookResponse struct {
 	ID       uint   `json:"id"`
 	Title    string `json:"title"`
-	ImageUrl string `json:"image_url"`
+	ImageUrl string `json:"imageUrl"`
 	Loanable bool   `json:"loanable"`
 	User     struct {
 		ID   uint   `json:"id"`
