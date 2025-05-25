@@ -3,10 +3,11 @@ package controller
 import (
 	"github.com/sayasurvey/golang/api/repository"
 	"github.com/gin-gonic/gin"
-	"fmt"
 	"net/http"
 	"github.com/sayasurvey/golang/model/schema"
 	"github.com/sayasurvey/golang/model/database"
+	"github.com/sayasurvey/golang/api/helper"
+	"strconv"
 )
 
 type BookResponse struct {
@@ -20,27 +21,63 @@ type BookResponse struct {
 	} `json:"user"`
 }
 
+type BooksResponse struct {
+	Books      []BookResponse `json:"books"`
+	CurrentPage int           `json:"currentPage"`
+	LastPage    int           `json:"lastPage"`
+	PerPage     int           `json:"perPage"`
+}
+
 func GetBooks(context *gin.Context) {
+	page := 1
+	perPage := 50
+
+	if pageStr := context.Query("page"); pageStr != "" {
+		if parsedPage, err := strconv.Atoi(pageStr); err == nil && parsedPage > 0 {
+			page = parsedPage
+		}
+	}
+
+	if perPageStr := context.Query("perPage"); perPageStr != "" {
+		if parsedPerPage, err := strconv.Atoi(perPageStr); err == nil && parsedPerPage > 0 {
+			perPage = parsedPerPage
+		}
+	}
+
 	books, err := repository.GetAllBooks()
-	fmt.Println("books", err)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"error": "本の一覧取得に失敗しました",
+		})
+		return
+	}
+
 	var responseBooks []BookResponse
 	for _, book := range books {
 		responseUser := BookResponse{
-				ID:       book.ID,
-				Title:    book.Title,
-				ImageUrl: book.ImageUrl,
-				Loanable: book.Loanable,
-				User: struct {
-					ID   uint   `json:"id"`
-					Name string `json:"name"`
-				}{
-					ID:   book.User.ID,
-					Name: book.User.Name,
-				},
+			ID:       book.ID,
+			Title:    book.Title,
+			ImageUrl: book.ImageUrl,
+			Loanable: book.Loanable,
+			User: struct {
+				ID   uint   `json:"id"`
+				Name string `json:"name"`
+			}{
+				ID:   book.User.ID,
+				Name: book.User.Name,
+			},
 		}
 		responseBooks = append(responseBooks, responseUser)
 	}
-	context.JSON(http.StatusOK, responseBooks)
+
+	paginatedBooks, currentPage, lastPage := helper.Pagination(responseBooks, page, perPage)
+
+	context.JSON(http.StatusOK, BooksResponse{
+		Books:      paginatedBooks,
+		CurrentPage: currentPage,
+		LastPage:    lastPage,
+		PerPage:     perPage,
+	})
 }
 
 type CreateBookRequest struct {
