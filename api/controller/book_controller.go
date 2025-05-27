@@ -83,7 +83,7 @@ func GetBooks(context *gin.Context) {
 type CreateBookRequest struct {
 	Title    string `json:"title" binding:"required"`
 	ImageUrl string `json:"imageUrl" binding:"required"`
-	Loanable bool   `json:"loanable" binding:"required"`
+	Loanable bool   `json:"loanable"`
 }
 
 func CreateBook(c *gin.Context) {
@@ -142,7 +142,7 @@ func CreateBook(c *gin.Context) {
 type UpdateBookRequest struct {
 	Title    string `json:"title" binding:"required"`
 	ImageUrl string `json:"imageUrl" binding:"required"`
-	Loanable bool   `json:"loanable" binding:"required"`
+	Loanable bool   `json:"loanable"`
 }
 
 type UpdateBookResponse struct {
