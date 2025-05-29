@@ -9,20 +9,19 @@ import (
 
 type BorrowBookRequest struct {
 	BookID        uint   `json:"book_id" binding:"required"`
-	CheckoutDate  string `json:"checkout_date" binding:"required"`
 	ReturnDueDate string `json:"return_due_date" binding:"required"`
 }
 
 type ReturnBookRequest struct {
-	BorrowedBookID uint `json:"borrowed_book_id" binding:"required"`
+	BorrowedBookID uint `json:"borrowedBookId" binding:"required"`
 }
 
 type BorrowedBookResponse struct {
 	ID            uint   `json:"id"`
 	Title         string `json:"title"`
 	ImageUrl      string `json:"imageUrl"`
-	CheckoutDate  string `json:"checkout_date"`
-	ReturnDueDate string `json:"return_due_date"`
+	CheckoutDate  string `json:"checkoutDate"`
+	ReturnDueDate string `json:"returnDueDate"`
 }
 
 var borrowedBookRepo = repository.NewBorrowedBookRepository()
@@ -59,13 +58,7 @@ func BorrowBook(c *gin.Context) {
 		return
 	}
 
-	checkoutDate, err := time.Parse("2006-01-02", request.CheckoutDate)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "貸出日の形式が正しくありません。YYYY-MM-DD形式で入力してください",
-		})
-		return
-	}
+	checkoutDate := time.Now()
 
 	returnDueDate, err := time.Parse("2006-01-02", request.ReturnDueDate)
 	if err != nil {
@@ -89,7 +82,7 @@ func BorrowBook(c *gin.Context) {
 			"id":              borrowedBook.ID,
 			"user_id":         borrowedBook.UserID,
 			"book_id":         borrowedBook.BookID,
-			"checkout_date":   request.CheckoutDate,
+			"checkout_date":   checkoutDate.Format("2006-01-02"),
 			"return_due_date": request.ReturnDueDate,
 		},
 	})
