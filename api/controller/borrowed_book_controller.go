@@ -8,8 +8,8 @@ import (
 )
 
 type BorrowBookRequest struct {
-	BookID        uint   `json:"book_id" binding:"required"`
-	ReturnDueDate string `json:"return_due_date" binding:"required"`
+	BookID        uint   `json:"bookId" binding:"required"`
+	ReturnDueDate string `json:"returnDueDate" binding:"required"`
 }
 
 type ReturnBookRequest struct {
