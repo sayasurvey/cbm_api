@@ -156,6 +156,6 @@ func GetBorrowedBooks(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"borrowed_books": response,
+		"borrowedBooks": response,
 	})
 }
