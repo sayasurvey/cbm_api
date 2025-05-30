@@ -12,6 +12,8 @@ func Pagination[T comparable](x []T, page int, perPage int) (data []T, currentPa
 		page = 1
 	} else if lastPage < page {
 		page = lastPage
+		currentPage = page
+		return []T{}, currentPage, lastPage
 	}
 
 	if page == lastPage {
