@@ -3,7 +3,9 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sayasurvey/golang/api/repository"
+	"github.com/sayasurvey/golang/api/helper"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -22,6 +24,13 @@ type BorrowedBookResponse struct {
 	ImageUrl      string `json:"imageUrl"`
 	CheckoutDate  string `json:"checkoutDate"`
 	ReturnDueDate string `json:"returnDueDate"`
+}
+
+type BorrowedBooksResponse struct {
+	BorrowedBooks []BorrowedBookResponse `json:"borrowedBooks"`
+	CurrentPage   int                    `json:"currentPage"`
+	LastPage      int                    `json:"lastPage"`
+	PerPage       int                    `json:"perPage"`
 }
 
 var borrowedBookRepo = repository.NewBorrowedBookRepository()
@@ -118,6 +127,21 @@ func ReturnBook(c *gin.Context) {
 }
 
 func GetBorrowedBooks(c *gin.Context) {
+	page := 1
+	perPage := 25
+
+	if pageStr := c.Query("page"); pageStr != "" {
+		if parsedPage, err := strconv.Atoi(pageStr); err == nil && parsedPage > 0 {
+			page = parsedPage
+		}
+	}
+
+	if perPageStr := c.Query("perPage"); perPageStr != "" {
+		if parsedPerPage, err := strconv.Atoi(perPageStr); err == nil && parsedPerPage > 0 {
+			perPage = parsedPerPage
+		}
+	}
+
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -155,7 +179,12 @@ func GetBorrowedBooks(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"borrowed_books": response,
+	paginatedBooks, currentPage, lastPage := helper.Pagination(response, page, perPage)
+
+	c.JSON(http.StatusOK, BorrowedBooksResponse{
+		BorrowedBooks: paginatedBooks,
+		CurrentPage:   currentPage,
+		LastPage:      lastPage,
+		PerPage:       perPage,
 	})
 }
