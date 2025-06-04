@@ -128,7 +128,7 @@ func ReturnBook(c *gin.Context) {
 
 func GetBorrowedBooks(c *gin.Context) {
 	page := 1
-	perPage := 25
+	perPage := 50
 
 	if pageStr := c.Query("page"); pageStr != "" {
 		if parsedPage, err := strconv.Atoi(pageStr); err == nil && parsedPage > 0 {
