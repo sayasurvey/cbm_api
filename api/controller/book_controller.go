@@ -29,25 +29,25 @@ type BooksResponse struct {
 	PerPage     int           `json:"perPage"`
 }
 
-func GetBooks(context *gin.Context) {
+func GetBooks(c *gin.Context) {
 	page := 1
 	perPage := 50
 
-	if pageStr := context.Query("page"); pageStr != "" {
+	if pageStr := c.Query("page"); pageStr != "" {
 		if parsedPage, err := strconv.Atoi(pageStr); err == nil && parsedPage > 0 {
 			page = parsedPage
 		}
 	}
 
-	if perPageStr := context.Query("perPage"); perPageStr != "" {
+	if perPageStr := c.Query("perPage"); perPageStr != "" {
 		if parsedPerPage, err := strconv.Atoi(perPageStr); err == nil && parsedPerPage > 0 {
 			perPage = parsedPerPage
 		}
 	}
 
-	userID, exists := context.Get("user_id")
+	userID, exists := c.Get("user_id")
 	if !exists {
-		context.JSON(http.StatusUnauthorized, gin.H{
+		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "認証が必要です",
 		})
 		return
@@ -55,7 +55,7 @@ func GetBooks(context *gin.Context) {
 
 	books, err := repository.GetAllBooks()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "本の一覧取得に失敗しました",
 		})
 		return
@@ -64,7 +64,7 @@ func GetBooks(context *gin.Context) {
 	wishListRepo := repository.NewBorrowingWishListRepository()
 	wishList, err := wishListRepo.GetWishListByUserID(userID.(uint))
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "お気に入り情報の取得に失敗しました",
 		})
 		return
@@ -97,7 +97,7 @@ func GetBooks(context *gin.Context) {
 
 	paginatedBooks, currentPage, lastPage := helper.Pagination(responseBooks, page, perPage)
 
-	context.JSON(http.StatusOK, BooksResponse{
+	c.JSON(http.StatusOK, BooksResponse{
 		Books:      paginatedBooks,
 		CurrentPage: currentPage,
 		LastPage:    lastPage,
