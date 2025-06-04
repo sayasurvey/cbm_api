@@ -15,6 +15,7 @@ type BookResponse struct {
 	Title  		string 		`json:"title"`
 	ImageUrl 	string 		`json:"imageUrl"`
 	Loanable 	bool 		`json:"loanable"`
+	IsWishList  bool        `json:"isWishList"`
 	User    struct {
 		ID   uint    	`json:"id"`
 		Name string 	`json:"name"`
@@ -44,12 +45,35 @@ func GetBooks(context *gin.Context) {
 		}
 	}
 
+	userID, exists := context.Get("user_id")
+	if !exists {
+		context.JSON(http.StatusUnauthorized, gin.H{
+			"error": "認証が必要です",
+		})
+		return
+	}
+
 	books, err := repository.GetAllBooks()
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"error": "本の一覧取得に失敗しました",
 		})
 		return
+	}
+
+	wishListRepo := repository.NewBorrowingWishListRepository()
+	wishList, err := wishListRepo.GetWishListByUserID(userID.(uint))
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"error": "お気に入り情報の取得に失敗しました",
+		})
+		return
+	}
+
+	// TODO コードの内容を調べる
+	wishListMap := make(map[uint]bool)
+	for _, item := range wishList {
+		wishListMap[item.BookID] = true
 	}
 
 	var responseBooks []BookResponse
@@ -59,6 +83,7 @@ func GetBooks(context *gin.Context) {
 			Title:    book.Title,
 			ImageUrl: book.ImageUrl,
 			Loanable: book.Loanable,
+			IsWishList: wishListMap[book.ID],
 			User: struct {
 				ID   uint   `json:"id"`
 				Name string `json:"name"`
