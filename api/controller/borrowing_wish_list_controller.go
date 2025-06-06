@@ -5,6 +5,7 @@ import (
 	"github.com/sayasurvey/golang/api/repository"
 	"net/http"
 	"strconv"
+	"github.com/sayasurvey/golang/api/helper"
 )
 
 type AddToWishListRequest struct {
@@ -15,6 +16,13 @@ type WishListResponse struct {
 	ID       uint   `json:"id"`
 	Title    string `json:"title"`
 	ImageUrl string `json:"imageUrl"`
+}
+
+type WishListResponseWrapper struct {
+	WishList    []WishListResponse `json:"wishList"`
+	CurrentPage int                `json:"currentPage"`
+	LastPage    int                `json:"lastPage"`
+	PerPage     int                `json:"perPage"`
 }
 
 var wishListRepo = repository.NewBorrowingWishListRepository()
@@ -109,6 +117,21 @@ func RemoveFromWishList(c *gin.Context) {
 }
 
 func GetWishList(c *gin.Context) {
+	page := 1
+	perPage := 50
+
+	if pageStr := c.Query("page"); pageStr != "" {
+		if parsedPage, err := strconv.Atoi(pageStr); err == nil && parsedPage > 0 {
+			page = parsedPage
+		}
+	}
+
+	if perPageStr := c.Query("perPage"); perPageStr != "" {
+		if parsedPerPage, err := strconv.Atoi(perPageStr); err == nil && parsedPerPage > 0 {
+			perPage = parsedPerPage
+		}
+	}
+
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -144,7 +167,12 @@ func GetWishList(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"wish_list": response,
+	paginatedWishList, currentPage, lastPage := helper.Pagination(response, page, perPage)
+
+	c.JSON(http.StatusOK, WishListResponseWrapper{
+		WishList:    paginatedWishList,
+		CurrentPage: currentPage,
+		LastPage:    lastPage,
+		PerPage:     perPage,
 	})
 }

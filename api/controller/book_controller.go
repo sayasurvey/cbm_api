@@ -15,6 +15,7 @@ type BookResponse struct {
 	Title  		string 		`json:"title"`
 	ImageUrl 	string 		`json:"imageUrl"`
 	Loanable 	bool 		`json:"loanable"`
+	IsWishList  bool        `json:"isWishList"`
 	User    struct {
 		ID   uint    	`json:"id"`
 		Name string 	`json:"name"`
@@ -28,28 +29,50 @@ type BooksResponse struct {
 	PerPage     int           `json:"perPage"`
 }
 
-func GetBooks(context *gin.Context) {
+func GetBooks(c *gin.Context) {
 	page := 1
 	perPage := 50
 
-	if pageStr := context.Query("page"); pageStr != "" {
+	if pageStr := c.Query("page"); pageStr != "" {
 		if parsedPage, err := strconv.Atoi(pageStr); err == nil && parsedPage > 0 {
 			page = parsedPage
 		}
 	}
 
-	if perPageStr := context.Query("perPage"); perPageStr != "" {
+	if perPageStr := c.Query("perPage"); perPageStr != "" {
 		if parsedPerPage, err := strconv.Atoi(perPageStr); err == nil && parsedPerPage > 0 {
 			perPage = parsedPerPage
 		}
 	}
 
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "認証が必要です",
+		})
+		return
+	}
+
 	books, err := repository.GetAllBooks()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "本の一覧取得に失敗しました",
 		})
 		return
+	}
+
+	wishListRepo := repository.NewBorrowingWishListRepository()
+	wishList, err := wishListRepo.GetWishListByUserID(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "お気に入り情報の取得に失敗しました",
+		})
+		return
+	}
+
+	wishListMap := make(map[uint]bool)
+	for _, item := range wishList {
+		wishListMap[item.BookID] = true
 	}
 
 	var responseBooks []BookResponse
@@ -59,6 +82,7 @@ func GetBooks(context *gin.Context) {
 			Title:    book.Title,
 			ImageUrl: book.ImageUrl,
 			Loanable: book.Loanable,
+			IsWishList: wishListMap[book.ID],
 			User: struct {
 				ID   uint   `json:"id"`
 				Name string `json:"name"`
@@ -72,7 +96,7 @@ func GetBooks(context *gin.Context) {
 
 	paginatedBooks, currentPage, lastPage := helper.Pagination(responseBooks, page, perPage)
 
-	context.JSON(http.StatusOK, BooksResponse{
+	c.JSON(http.StatusOK, BooksResponse{
 		Books:      paginatedBooks,
 		CurrentPage: currentPage,
 		LastPage:    lastPage,
