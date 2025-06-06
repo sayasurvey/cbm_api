@@ -70,7 +70,6 @@ func GetBooks(c *gin.Context) {
 		return
 	}
 
-	// TODO コードの内容を調べる
 	wishListMap := make(map[uint]bool)
 	for _, item := range wishList {
 		wishListMap[item.BookID] = true
