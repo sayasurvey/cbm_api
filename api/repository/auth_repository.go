@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/sayasurvey/golang/model/schema"
-	"github.com/sayasurvey/golang/model/database"
+	"github.com/sayasurvey/cbm_api/model/schema"
+	"github.com/sayasurvey/cbm_api/model/database"
 	"golang.org/x/crypto/bcrypt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"

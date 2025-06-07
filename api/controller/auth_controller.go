@@ -3,7 +3,7 @@ package controller
 import (
 	"net/http"
 	"github.com/gin-gonic/gin"
-	"github.com/sayasurvey/golang/api/repository"
+	"github.com/sayasurvey/cbm_api/api/repository"
 )
 
 type RegisterRequest struct {
