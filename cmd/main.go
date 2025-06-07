@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/sayasurvey/golang/router"
-	"github.com/sayasurvey/golang/model/database"
+	"github.com/sayasurvey/cbm_api/router"
+	"github.com/sayasurvey/cbm_api/model/database"
 )
 
 func main() {
