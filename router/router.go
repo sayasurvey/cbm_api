@@ -2,8 +2,8 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/sayasurvey/cbm_api/api/controller"
-	"github.com/sayasurvey/cbm_api/middleware"
+	"github.com/sayasurvey/golang/api/controller"
+	"github.com/sayasurvey/golang/middleware"
 	"github.com/gin-contrib/cors"
 	"os"
 )

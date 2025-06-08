@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/sayasurvey/cbm_api/model/database"
-	"github.com/sayasurvey/cbm_api/model/schema"
+	"github.com/sayasurvey/golang/model/database"
+	"github.com/sayasurvey/golang/model/schema"
 	"fmt"
 )
 

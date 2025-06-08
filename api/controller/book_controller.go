@@ -1,12 +1,12 @@
 package controller
 
 import (
-	"github.com/sayasurvey/cbm_api/api/repository"
+	"github.com/sayasurvey/golang/api/repository"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"github.com/sayasurvey/cbm_api/model/schema"
-	"github.com/sayasurvey/cbm_api/model/database"
-	"github.com/sayasurvey/cbm_api/api/helper"
+	"github.com/sayasurvey/golang/model/schema"
+	"github.com/sayasurvey/golang/model/database"
+	"github.com/sayasurvey/golang/api/helper"
 	"strconv"
 )
 
