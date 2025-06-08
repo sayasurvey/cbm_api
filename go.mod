@@ -1,4 +1,4 @@
-module github.com/sayasurvey/cbm_api
+module github.com/sayasurvey/golang
 
 go 1.23.0
 

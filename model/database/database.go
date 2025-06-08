@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/sayasurvey/cbm_api/model/schema"
+	"github.com/sayasurvey/golang/model/schema"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 	"gorm.io/driver/mysql"
