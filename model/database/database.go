@@ -4,7 +4,7 @@ import (
 	"github.com/sayasurvey/golang/model/schema"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"os"
 	"fmt"
 )
@@ -20,10 +20,10 @@ func DbInit() {
 	DB_PASSWORD := os.Getenv("DB_PASSWORD")
 	DB_NAME := os.Getenv("DB_NAME")
 	
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Tokyo",
+		DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT)
 
-	Db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	Db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		fmt.Println("database connection faild", err)
 		panic("failed to connect to database")

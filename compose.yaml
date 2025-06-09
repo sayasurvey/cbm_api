@@ -1,0 +1,34 @@
+services:
+  api:
+    container_name: cbm_api_container
+    build:
+      context: ./
+    ports:
+      - 8080:8080
+    tty: true
+    volumes:
+      - ./:/go/src
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+    depends_on:
+      - db
+
+  db:
+    container_name: cbm_db_container
+    image: postgres:15
+    ports:
+      - 5432:5432
+    volumes:
+      - cbm-dev-db-volume:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    user: postgres
+    restart: always
+volumes:
+  cbm-dev-db-volume:
