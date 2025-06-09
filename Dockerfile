@@ -1,28 +1,27 @@
 FROM golang:1.23-bullseye
 
-ENV ROOT=/go/src
+WORKDIR /app
 
-WORKDIR ${ROOT}
-
-RUN apt update \
-    && apt clean \
-    && rm -r /var/lib/apt/lists/*
-
-RUN apt install git && \
-    apt install curl
+RUN apt update && \
+    apt install -y git curl && \
+    apt clean && rm -rf /var/lib/apt/lists/*
 
 COPY go.mod go.sum ./
+RUN go mod download
 
-RUN /bin/sh -c /bin/sh -c go mod download
-
-RUN /bin/sh -c /bin/sh go get -u github.com/go-sql-driver/mysql
+RUN go get -u github.com/go-sql-driver/mysql
 
 RUN go install github.com/cosmtrek/air@v1.29.0
+ENV PATH="/go/bin:${PATH}"
 
 COPY . .
 
+ENV PORT=8080
 EXPOSE 8080
 
+# デプロイ環境に応じて下記どちらかのコメントを外す
+# 開発用途
 # CMD ["air", "-c", ".air.toml"]
 
-# CMD ["go", "run", "cmd/main.go"]
+# 本番用途
+CMD ["go", "run", "cmd/main.go"]
