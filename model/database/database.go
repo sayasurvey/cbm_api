@@ -13,7 +13,6 @@ var Db *gorm.DB
 var err error
 
 func DbInit() {
-	// Load .env file only in development
 	godotenv.Load(".env")
 	
 	DB_HOST := os.Getenv("DB_HOST")
@@ -22,7 +21,6 @@ func DbInit() {
 	DB_PASSWORD := os.Getenv("DB_PASSWORD")
 	DB_NAME := os.Getenv("DB_NAME")
 	
-	// Use sslmode=require for production (Render), disable for local development
 	sslMode := "require"
 	if DB_HOST == "db" || DB_HOST == "localhost" {
 		sslMode = "disable"
