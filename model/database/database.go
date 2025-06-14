@@ -13,15 +13,23 @@ var Db *gorm.DB
 var err error
 
 func DbInit() {
+	// Load .env file only in development
 	godotenv.Load(".env")
+	
 	DB_HOST := os.Getenv("DB_HOST")
 	DB_PORT := os.Getenv("DB_PORT")
 	DB_USER := os.Getenv("DB_USER")
 	DB_PASSWORD := os.Getenv("DB_PASSWORD")
 	DB_NAME := os.Getenv("DB_NAME")
 	
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Tokyo",
-		DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT)
+	// Use sslmode=require for production (Render), disable for local development
+	sslMode := "require"
+	if DB_HOST == "db" || DB_HOST == "localhost" {
+		sslMode = "disable"
+	}
+	
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Tokyo",
+		DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT, sslMode)
 
 	Db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
