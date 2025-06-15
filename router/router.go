@@ -21,8 +21,8 @@ func GetRouter() *gin.Engine {
 	}))
 
 	r.GET("/", controller.SayHello)
-	r.POST("api/login", controller.Login)
-	r.POST("api/register", controller.Register)
+	r.POST("/api/login", controller.Login)
+	r.POST("/api/users/register", controller.Register)
 
 	api := r.Group("/api", middleware.JWTAuthMiddleware())
 	{
